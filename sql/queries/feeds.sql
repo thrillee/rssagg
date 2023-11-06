@@ -7,6 +7,12 @@ RETURNING *;
 -- name: GetFeeds :many
 select * from feeds order by created desc;
 
+-- name: GetNextFeedsToFetch :many
+SELECT * FROM feeds ORDER BY last_fetched_at ASC NULLS FIRST limit $1;
+
+-- name: MarkFeedAsFetched :one
+update feeds set last_fetched_at = now(), modified=now() where id=$1 RETURNING *;
+
 
 -- name: CreateFeedFollow :one
 INSERT INTO feed_follows (

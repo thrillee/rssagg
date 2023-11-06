@@ -10,6 +10,19 @@ import (
 	"github.com/thrillee/rssagg/internal/database"
 )
 
+func (apiCfg *apiConfig) handleGetUserPosts(w http.ResponseWriter, r *http.Request, user database.User) {
+	posts, err := apiCfg.DB.GetUserPosts(r.Context(), database.GetUserPostsParams{
+		UserID: user.ID,
+		Limit:  10,
+	})
+	if err != nil {
+		responseWithError(w, 400, fmt.Sprintf("Error fetching user posts: %v", err))
+		return
+	}
+
+	responseWithJSON(w, 200, databasePostsToPosts(posts))
+}
+
 func (apiCfg *apiConfig) handleGetUser(w http.ResponseWriter, r *http.Request, user database.User) {
 	responseWithJSON(w, 200, databaseUserToUser(user))
 }

@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/cors"
@@ -35,9 +36,12 @@ func main() {
 		log.Fatal("Cannot connect to Database")
 	}
 
+	db := database.New(conn)
 	apiCfg := apiConfig{
-		DB: database.New(conn),
+		DB: db,
 	}
+
+	go startScraping(db, 10, 60*time.Second)
 
 	router := chi.NewRouter()
 
@@ -63,6 +67,8 @@ func main() {
 	v1Router.Post("/feeds-follows", apiCfg.middlewareAuth(apiCfg.handlerCreateFeedFollow))
 	v1Router.Get("/feeds-follows", apiCfg.middlewareAuth(apiCfg.handlerGetUserFeedFollows))
 	v1Router.Delete("/feeds-follows/{feedFollowID}", apiCfg.middlewareAuth(apiCfg.handlerDeleteFeedFollows))
+
+	v1Router.Get("/posts", apiCfg.middlewareAuth(apiCfg.handleGetUserPosts))
 
 	router.Mount("/v1", v1Router)
 
